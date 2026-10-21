@@ -1,0 +1,85 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline'">
+<title>Mascota</title>
+<style>
+  :root { --bg: #262624; --bar: #1E1E1C; --chip: #34332F; --text: #EDEBE6; --muted: #A9A69E; --green: #1DB954; --orange: #F28C28; }
+  html, body { margin: 0; height: 100%; background: var(--bg); color: var(--text);
+    font-family: "Segoe UI", -apple-system, system-ui, sans-serif; user-select: none; -webkit-user-select: none; overflow: hidden; }
+  .bar { height: 44px; box-sizing: border-box; background: var(--bar); display: flex; align-items: center; gap: 4px; padding: 0 8px;
+    border-bottom: 1px solid #2E2D2A; }
+  .tab { display: flex; align-items: center; gap: 7px; background: none; border: 0; color: var(--muted);
+    font: 600 13px inherit; font-family: inherit; padding: 7px 12px; border-radius: 8px; cursor: pointer; }
+  .tab:hover { color: var(--text); }
+  .tab.on { background: var(--chip); color: #F6F4EE; }
+  .tab svg { width: 15px; height: 15px; }
+  .tab .dot { width: 6px; height: 6px; border-radius: 50%; background: var(--green); display: none; }
+  .tab.playing .dot { display: inline-block; }
+  .spacer { flex: 1; }
+  .icon { width: 30px; height: 30px; display: grid; place-items: center; border-radius: 8px; border: 0; background: none;
+    color: var(--muted); cursor: pointer; }
+  .icon:hover { background: var(--chip); color: var(--text); }
+  .icon svg { width: 16px; height: 16px; }
+
+  #music { display: none; height: calc(100% - 44px); flex-direction: column; align-items: center; justify-content: center;
+    gap: 14px; padding: 20px; box-sizing: border-box; text-align: center; }
+  body.music #music { display: flex; }
+  #stage { width: 170px; height: 170px; }
+  .song { font-size: 19px; font-weight: 700; max-width: 100%; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .artist { color: var(--muted); font-size: 14px; margin-top: -8px; min-height: 18px; }
+  .ctl { display: flex; align-items: center; gap: 16px; margin-top: 4px; }
+  .ctl button { width: 44px; height: 44px; border-radius: 50%; border: 0; background: var(--chip); color: var(--text);
+    display: grid; place-items: center; cursor: pointer; }
+  .ctl button:hover { background: #403F3A; }
+  .ctl button svg { width: 18px; height: 18px; }
+  .ctl #play { width: 60px; height: 60px; background: var(--green); color: #0B0B0B; }
+  .ctl #play:hover { background: #22CC5E; }
+  .ctl #play svg { width: 22px; height: 22px; }
+  .status { color: var(--muted); font-size: 12.5px; }
+  .open { margin-top: 6px; background: none; border: 1px solid #45443F; color: var(--text); border-radius: 999px;
+    padding: 8px 16px; font: 600 12.5px inherit; font-family: inherit; cursor: pointer; }
+  .open:hover { border-color: var(--green); }
+  .note { color: #7D7A73; font-size: 11.5px; max-width: 300px; line-height: 1.45; }
+</style>
+</head>
+<body>
+  <div class="bar">
+    <button class="tab on" id="tClaude">
+      <svg viewBox="0 0 24 24" fill="currentColor"><path d="M12 2l1.6 6.2L20 6l-4.4 4.8L22 12l-6.4 1.2L20 18l-6.4-2.2L12 22l-1.6-6.2L4 18l4.4-4.8L2 12l6.4-1.2L4 6l6.4 2.2z"/></svg>
+      Claude
+    </button>
+    <button class="tab" id="tMusic">
+      <svg viewBox="0 0 24 24" fill="currentColor"><path d="M12 2a10 10 0 100 20 10 10 0 000-20zm4.6 14.4a.62.62 0 01-.86.2c-2.35-1.44-5.3-1.76-8.79-.96a.62.62 0 11-.28-1.22c3.81-.87 7.09-.5 9.72 1.12.3.18.39.57.21.86zm1.22-2.72a.78.78 0 01-1.07.26c-2.69-1.65-6.79-2.13-9.97-1.17a.78.78 0 01-.45-1.5c3.63-1.1 8.15-.57 11.24 1.33.37.22.48.71.25 1.08zm.1-2.84C14.7 8.93 9.38 8.75 6.3 9.69a.94.94 0 11-.54-1.8c3.53-1.07 9.4-.86 13.12 1.34a.94.94 0 01-.96 1.61z"/></svg>
+      Música <span class="dot"></span>
+    </button>
+    <div class="spacer"></div>
+    <button class="icon" id="reload" title="Recargar Claude">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M20 11a8 8 0 10-2.3 5.7M20 4v7h-7"/></svg>
+    </button>
+    <button class="icon" id="close" title="Ocultar">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M6 6l12 12M18 6L6 18"/></svg>
+    </button>
+  </div>
+
+  <div id="music">
+    <canvas id="stage"></canvas>
+    <div class="song" id="song">Nada sonando</div>
+    <div class="artist" id="artist"></div>
+    <div class="ctl">
+      <button id="prev" title="Anterior"><svg viewBox="0 0 24 24" fill="currentColor"><path d="M6 5h2v14H6zM20 5v14L9 12z"/></svg></button>
+      <button id="play" title="Reproducir / pausar"><svg id="playIcon" viewBox="0 0 24 24" fill="currentColor"><path d="M7 4l14 8-14 8z"/></svg></button>
+      <button id="next" title="Siguiente"><svg viewBox="0 0 24 24" fill="currentColor"><path d="M16 5h2v14h-2zM4 5v14l11-7z"/></svg></button>
+    </div>
+    <div class="status" id="status">Buscando Spotify…</div>
+    <button class="open" id="openSp">Abrir Spotify</button>
+    <div class="note">Controla la app de Spotify de tu computadora. Si Spotify está cerrado, ábrelo con el botón de arriba.</div>
+  </div>
+
+  <script src="pet.config.js"></script>
+  <script src="character.js"></script>
+  <script src="engine.js"></script>
+  <script src="panel.js"></script>
+</body>
+</html>

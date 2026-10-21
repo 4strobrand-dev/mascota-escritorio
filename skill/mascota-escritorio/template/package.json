@@ -1,0 +1,63 @@
+{
+  "name": "astro",
+  "productName": "Astro",
+  "version": "1.0.0",
+  "description": "Astro: mascota voxel que abre tu Claude desde el escritorio",
+  "author": "ASTROBRAND",
+  "main": "main.js",
+  "scripts": {
+    "start": "electron .",
+    "dist:win": "electron-builder --win --x64",
+    "dist:mac": "electron-builder --mac"
+  },
+  "build": {
+    "appId": "org.astrobrand.astro",
+    "productName": "Astro",
+    "files": [
+      "main.js",
+      "preload.js",
+      "music.js",
+      "pet.html",
+      "pet.js",
+      "panel.html",
+      "panel.js",
+      "panel-preload.js",
+      "engine.js",
+      "character.js",
+      "pet.config.js",
+      "assets/**"
+    ],
+    "publish": null,
+    "win": {
+      "target": [
+        "nsis",
+        "portable"
+      ],
+      "icon": "assets/icon.png"
+    },
+    "nsis": {
+      "oneClick": true,
+      "runAfterFinish": true,
+      "artifactName": "${productName}-Instalador-Windows.${ext}"
+    },
+    "portable": {
+      "artifactName": "${productName}-Portable-Windows.${ext}"
+    },
+    "mac": {
+      "target": [
+        "dmg"
+      ],
+      "icon": "assets/icon.png",
+      "identity": "-",
+      "category": "public.app-category.productivity",
+      "extendInfo": {
+        "LSUIElement": true
+      },
+      "artifactName": "${productName}-Mac-${arch}.${ext}"
+    }
+  },
+  "devDependencies": {
+    "electron": "^38.0.0",
+    "electron-builder": "^26.0.0"
+  }
+}

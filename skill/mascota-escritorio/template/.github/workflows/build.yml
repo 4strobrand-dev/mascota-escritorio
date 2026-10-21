@@ -1,0 +1,52 @@
+# Compila los instaladores de Windows y Mac en la nube de GitHub.
+# Se ejecuta al crear una etiqueta "v1.0.0" (o a mano desde la pestaña Actions).
+name: Compilar instaladores
+
+on:
+  push:
+    tags: ['v*']
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  build:
+    strategy:
+      matrix:
+        os: [windows-latest, macos-latest]
+    runs-on: ${{ matrix.os }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Preparar (íconos y package.json desde el personaje)
+        run: |
+          pip install pillow
+          node tools/configure.js .
+          python tools/icons.py .
+      - run: npm install
+      - name: Windows
+        if: runner.os == 'Windows'
+        run: npx electron-builder --win --x64 --publish never
+      - name: Mac (Apple Silicon e Intel)
+        if: runner.os == 'macOS'
+        run: npx electron-builder --mac --arm64 --x64 --publish never
+      - uses: actions/upload-artifact@v4
+        with:
+          name: instaladores-${{ runner.os }}
+          path: |
+            dist/*.exe
+            dist/*.dmg
+          if-no-files-found: ignore
+      - name: Publicar en Releases
+        if: startsWith(github.ref, 'refs/tags/')
+        uses: softprops/action-gh-release@v2
+        with:
+          files: |
+            dist/*.exe
+            dist/*.dmg
